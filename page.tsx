@@ -1,24 +1,49 @@
-// app/growth-map/page.tsx
-// Зеркало того, что уже собрано в системе — не создание, а навигация
-// по экосистеме (см. архитектуру, сценарий 3.2).
+// app/library/page.tsx
+// Просмотр контентной библиотеки (документ 6). Только просмотр в v1 —
+// пополнение через тебя напрямую, не через UI-форму (документ 6).
 
-import { getGrowthMapStages } from "@/lib/db/queries/context";
+import Link from "next/link";
+import fs from "node:fs/promises";
+import path from "node:path";
 
-export default async function GrowthMapPage() {
-  const stages = await getGrowthMapStages();
+const CATEGORIES: Array<{ key: string; file: string; label: string }> = [
+  { key: "observation", file: "observations.json", label: "Наблюдения" },
+  { key: "story", file: "stories.json", label: "Истории" },
+  { key: "mistake", file: "mistakes.json", label: "Ошибки" },
+  { key: "myth", file: "myths.json", label: "Мифы" },
+  { key: "situation", file: "situations.json", label: "Ситуации" },
+  { key: "dialogue", file: "dialogues.json", label: "Диалоги" },
+  { key: "reflection", file: "reflections.json", label: "Размышления" },
+];
+
+export default async function LibraryPage() {
+  const root = path.join(process.cwd(), "knowledge-base", "content-library");
+  const allEntries = await Promise.all(
+    CATEGORIES.map(async (c) => {
+      const raw = await fs.readFile(path.join(root, c.file), "utf-8").catch(() => "[]");
+      return { ...c, entries: JSON.parse(raw) as Array<{ id: string; text: string; themes: string[]; usedCount: number }> };
+    })
+  );
 
   return (
     <main style={{ minHeight: "100vh", background: "#080808", color: "#fff", padding: 32, fontFamily: "Onest, sans-serif" }}>
-      <h1 style={{ fontFamily: "Barlow Condensed, sans-serif", fontWeight: 900 }}>Карта роста</h1>
-      <ol style={{ maxWidth: 560, margin: "24px auto", padding: 0, listStyle: "none" }}>
-        {stages.map((stage) => (
-          <li key={stage.id} style={{ padding: 16, marginBottom: 8, background: "#111", borderLeft: "3px solid #F5C518" }}>
-            <strong>{stage.order}. {stage.name}</strong>
-            {stage.description && <p style={{ color: "#888", marginTop: 4 }}>{stage.description}</p>}
-            <p style={{ color: "#555", fontSize: 13, marginTop: 4 }}>Пока нет материалов на этом этапе</p>
-          </li>
+      <Link href="/menu" style={{ color: "#666", textDecoration: "none" }}>← Назад</Link>
+      <h1 style={{ fontFamily: "Barlow Condensed, sans-serif", fontWeight: 900, marginTop: 16 }}>Библиотека</h1>
+      <div style={{ maxWidth: 720, margin: "24px auto" }}>
+        {allEntries.map((cat) => (
+          <div key={cat.key} style={{ marginBottom: 32 }}>
+            <h3 style={{ color: "#F5C518" }}>{cat.label}</h3>
+            {cat.entries.map((e) => (
+              <div key={e.id} style={{ padding: 12, background: "#111", borderRadius: 4, marginTop: 8 }}>
+                <p>{e.text}</p>
+                <div style={{ color: "#666", fontSize: 12, marginTop: 4 }}>
+                  {e.themes.join(", ")} · использовано {e.usedCount} раз
+                </div>
+              </div>
+            ))}
+          </div>
         ))}
-      </ol>
+      </div>
     </main>
   );
 }
