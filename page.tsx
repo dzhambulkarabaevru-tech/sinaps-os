@@ -1,48 +1,20 @@
-// app/library/page.tsx
-// Просмотр контентной библиотеки (документ 6). Только просмотр в v1 —
-// пополнение через тебя напрямую, не через UI-форму (документ 6).
+// app/menu/page.tsx
+// Второстепенное меню — Библиотека и Настройки не входят в три главных
+// действия архитектуры v2.1, доступны отдельно (см. документ 8, примечание).
 
 import Link from "next/link";
-import fs from "node:fs/promises";
-import path from "node:path";
 
-const CATEGORIES: Array<{ key: string; file: string; label: string }> = [
-  { key: "observation", file: "observations.json", label: "Наблюдения" },
-  { key: "story", file: "stories.json", label: "Истории" },
-  { key: "mistake", file: "mistakes.json", label: "Ошибки" },
-  { key: "myth", file: "myths.json", label: "Мифы" },
-  { key: "situation", file: "situations.json", label: "Ситуации" },
-  { key: "dialogue", file: "dialogues.json", label: "Диалоги" },
-  { key: "reflection", file: "reflections.json", label: "Размышления" },
-];
-
-export default async function LibraryPage() {
-  const root = path.join(process.cwd(), "knowledge-base", "content-library");
-  const allEntries = await Promise.all(
-    CATEGORIES.map(async (c) => {
-      const raw = await fs.readFile(path.join(root, c.file), "utf-8").catch(() => "[]");
-      return { ...c, entries: JSON.parse(raw) as Array<{ id: string; text: string; themes: string[]; usedCount: number }> };
-    })
-  );
-
+export default function MenuPage() {
   return (
     <main style={{ minHeight: "100vh", background: "#080808", color: "#fff", padding: 32, fontFamily: "Onest, sans-serif" }}>
-      <Link href="/menu" style={{ color: "#666", textDecoration: "none" }}>← Назад</Link>
-      <h1 style={{ fontFamily: "Barlow Condensed, sans-serif", fontWeight: 900, marginTop: 16 }}>Библиотека</h1>
-      <div style={{ maxWidth: 720, margin: "24px auto" }}>
-        {allEntries.map((cat) => (
-          <div key={cat.key} style={{ marginBottom: 32 }}>
-            <h3 style={{ color: "#F5C518" }}>{cat.label}</h3>
-            {cat.entries.map((e) => (
-              <div key={e.id} style={{ padding: 12, background: "#111", borderRadius: 4, marginTop: 8 }}>
-                <p>{e.text}</p>
-                <div style={{ color: "#666", fontSize: 12, marginTop: 4 }}>
-                  {e.themes.join(", ")} · использовано {e.usedCount} раз
-                </div>
-              </div>
-            ))}
-          </div>
-        ))}
+      <Link href="/" style={{ color: "#666", textDecoration: "none" }}>← Назад</Link>
+      <div style={{ maxWidth: 320, margin: "60px auto 0", display: "flex", flexDirection: "column", gap: 16 }}>
+        <Link href="/library" style={{ padding: 16, background: "#111", border: "1px solid #333", color: "#fff", textDecoration: "none", borderRadius: 4, textAlign: "center" }}>
+          Библиотека
+        </Link>
+        <Link href="/settings" style={{ padding: 16, background: "#111", border: "1px solid #333", color: "#fff", textDecoration: "none", borderRadius: 4, textAlign: "center" }}>
+          Настройки
+        </Link>
       </div>
     </main>
   );
